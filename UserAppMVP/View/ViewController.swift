@@ -21,17 +21,20 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
+        
         // Navigation Bar
         self.navigationItem.title = "Users"
         navigationController?.navigationBar.prefersLargeTitles = true
+        
         // Table
         self.view.addSubview(tableView)
+        tableView.frame = view.bounds
         tableView.delegate = self
         tableView.dataSource = self
+        
         // Presenter
-        presenter.setWithDelegate(delegate: self)
-        presenter.getUsers()
-        tableView.frame = view.bounds
+        presenter.delegate = self
+        presenter.getUsers(model: [User].self)
     }
 }
 
@@ -50,22 +53,23 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         // Ask presenter to handle the tap
+        presenter.didTap(user: users[indexPath.row])
     }
 }
 
 // MARK: - UserPresenterDelegate
 extension ViewController: UserPresenterDelegate {
-    func presentUsers(users: [User]) {
-        self.users = users
+    func presentUsers<T>(users: T) {
+        self.users = users as! [User]
         DispatchQueue.main.async {
             self.tableView.reloadData()
         }
     }
     
     func presentAlert(title: String, messsage: String) {
-        
+        let alert = UIAlertController(title: title, message: messsage, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Dissmiss", style: .cancel, handler: nil))
+        present(alert, animated: true)
     }
-    
-    
 }
 

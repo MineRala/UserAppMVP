@@ -8,33 +8,32 @@
 import UIKit
 
 protocol UserPresenterDelegate: AnyObject {
-    func presentUsers(users: [User])
+    func presentUsers<T>(users: T)
     func presentAlert(title: String, messsage: String)
 }
 
-typealias PresenterDelegate = UserPresenterDelegate & UIViewController
-
 class UserPresenter {
-    weak var delegate: PresenterDelegate?
+    weak var delegate: UserPresenterDelegate?
     private let baseURL = "https://jsonplaceholder.typicode.com/users"
 
-    public func setWithDelegate(delegate: PresenterDelegate) {
-        self.delegate = delegate
-    }
-    
-    public func getUsers() {
+    public func getUsers<T: Decodable>(model: T.Type) {
         guard let url = URL(string: baseURL) else { return }
-        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
-            guard let data = data, error == nil else {
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            guard let data = data, let response = response as? HTTPURLResponse, response.statusCode == 200, error == nil else {
                 return
             }
             do {
-                let decodeObject = try JSONDecoder().decode([User].self, from: data)
-                self?.delegate?.presentUsers(users: decodeObject)
+                let users = try JSONDecoder().decode(model, from: data)
+                self?.delegate?.presentUsers(users: users)
             } catch {
                 print(error)
             }
 
         }.resume()
+    }
+    
+    public func didTap(user: User) {
+        self.delegate?.presentAlert(title: user.name,
+                                    messsage: "\(user.name) has an email of \(user.email) & a username of \(user.username)")
     }
 }
