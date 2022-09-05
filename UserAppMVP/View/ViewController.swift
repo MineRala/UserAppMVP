@@ -61,8 +61,8 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
 extension ViewController: UserPresenterDelegate {
     func presentUsers<T>(users: T) {
         self.users = users as! [User]
-        DispatchQueue.main.async {
-            self.tableView.reloadData()
+        DispatchQueue.main.async { [weak self] in
+            self?.tableView.reloadData()
         }
     }
     
